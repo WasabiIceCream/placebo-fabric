@@ -1,0 +1,13 @@
+{
+  "required": true,
+  "package": "dev.shadowsoffire.placebo.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "TagEntryAccessor",
+    "ItemStackCachedObjectMixin"
+  ],
+  "client": [
+    "client.AbstractContainerScreenMixin"
+  ],
+  "minVersion": "0.8.5"
+}
