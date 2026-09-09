@@ -15,3 +15,7 @@ system needs.
 ## License
 
 MIT, same as upstream, see `LICENSE`.
+
+## Development history
+
+For the full porting log, see `DEVLOG.md`.
