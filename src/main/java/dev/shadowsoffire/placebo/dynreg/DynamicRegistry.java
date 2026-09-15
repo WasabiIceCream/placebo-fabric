@@ -81,8 +81,9 @@ public abstract class DynamicRegistry<R> extends SimplePreparableReloadListener<
     private static final Map<Identifier, DynamicRegistry<?>> ALL_REGISTRIES = new ConcurrentHashMap<>();
 
     /**
-     * The currently running server, tracked purely so {@link #apply} can decode against real datapack registries
-     * (enchantments, etc.) instead of a plain {@link JsonOps}, when one is available.
+     * The current up-to-date registry lookup, tracked purely so {@link #apply} can decode against real datapack
+     * registries and current tag content (enchantments, block/item tags, etc.) instead of a plain {@link JsonOps},
+     * when one is available.
      * <p>
      * Port note: found live — {@link net.minecraft.world.item.enchantment.Enchantment#CODEC} and similar
      * dynamic-registry-holder codecs need a {@link net.minecraft.resources.RegistryOps}, which requires a
@@ -91,23 +92,38 @@ public abstract class DynamicRegistry<R> extends SimplePreparableReloadListener<
      * registry" — {@link net.minecraft.core.registries.BuiltInRegistries} holders (attributes, items, etc.) were
      * unaffected since those don't need registry-context lookup at all.
      * <p>
-     * <b>Known limitation</b>: this only helps {@link #apply} calls that happen after a Fabric server lifecycle
-     * event has fired at least once (e.g. a manual {@code /reload}) — confirmed live, with debug logging, that the
-     * very first resource reload at server boot (the one that loads every {@code apotheosis:affixes}/{@code gems}
-     * file) completes entirely before {@code ServerLifecycleEvents.SERVER_STARTING} *or*
-     * {@code START_DATA_PACK_RELOAD} fire; both were tried and both were still null for that first reload. Actually
-     * covering the boot-time reload too would need a mixin into {@code MinecraftServer}'s own early bootstrap to
-     * capture registry access before that first reload runs — not done here; the boot-time "Can't access registry"
-     * failures for enchantment-holder fields are a known, low-priority gap (see {@code modpack-status.md}), not a
-     * regression from before this fix.
+     * This used to be captured from a {@code MinecraftServer} instance handed to a
+     * {@code ServerLifecycleEvents.SERVER_STARTING}/{@code START_DATA_PACK_RELOAD} listener — but both of those
+     * fire <em>after</em> the very first resource reload at server boot (the one that loads every
+     * {@code apotheosis:affixes}/{@code gems} file) has already completed, so that first reload always fell back to
+     * plain {@link JsonOps}. A second pass then captured {@code registryAccess.compositeAccess()} directly from
+     * {@code ReloadableServerResources.loadResources}'s parameters instead — which fixed the enchantment-holder case,
+     * but not tag references (e.g. {@code "#apotheosis:stoneforming_candidates"}): those failed with
+     * {@code Missing tag} because static-registry (block/item/etc.) tags aren't applied into the live
+     * {@code RegistryAccess} until well after {@code loadResources()}'s entire reload-listener list — this one
+     * included — has already run.
+     * <p>
+     * Now set directly by {@link dev.shadowsoffire.placebo.mixin.ReloadableServerResourcesMixin}, which instead
+     * captures the {@link net.minecraft.core.HolderLookup.Provider} vanilla threads into this same reload's
+     * recipes/advancements/loot-table loaders — a provider that's already built with current tag content via
+     * {@code TagLoader.buildUpdatedLookups(...)}, without needing to wait for that later global apply step. See the
+     * mixin's javadoc for the full trace.
      */
     @Nullable
-    private static MinecraftServer currentServer;
+    private static net.minecraft.core.HolderLookup.Provider currentRegistryLookup;
 
     static {
-        net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents.START_DATA_PACK_RELOAD.register((server, resources) -> currentServer = server);
-        net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents.SERVER_STARTING.register(server -> currentServer = server);
-        net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents.SERVER_STOPPED.register(server -> currentServer = null);
+        net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents.SERVER_STOPPED.register(server -> currentRegistryLookup = null);
+    }
+
+    /**
+     * Called by {@link dev.shadowsoffire.placebo.mixin.ReloadableServerResourcesMixin} the moment an up-to-date
+     * {@link net.minecraft.core.HolderLookup.Provider} becomes available, so {@link #apply} can use it for every
+     * reload from then on, boot included.
+     */
+    @ApiStatus.Internal
+    public static void setRegistryLookup(net.minecraft.core.HolderLookup.Provider lookup) {
+        currentRegistryLookup = lookup;
     }
 
     protected final Logger logger;
@@ -217,8 +233,8 @@ public abstract class DynamicRegistry<R> extends SimplePreparableReloadListener<
     protected final void apply(Map<Identifier, JsonElement> objects, ResourceManager pResourceManager, ProfilerFiller pProfiler) {
         this.beginReload(ReloadType.SERVER);
         Codec<R> codec = this.serializer.codec();
-        com.mojang.serialization.DynamicOps<JsonElement> ops = currentServer != null
-            ? net.minecraft.resources.RegistryOps.create(JsonOps.INSTANCE, currentServer.registryAccess())
+        com.mojang.serialization.DynamicOps<JsonElement> ops = currentRegistryLookup != null
+            ? currentRegistryLookup.createSerializationContext(JsonOps.INSTANCE)
             : JsonOps.INSTANCE;
         objects.forEach((key, ele) -> {
             try {
