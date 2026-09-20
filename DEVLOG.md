@@ -5,8 +5,8 @@ the shared library mod Apotheosis is built on — ported only as far as needed t
 support the Apotheosis Adventure-module Fabric port (`mod-dev/apotheosis-fabric/`).
 MIT licensed upstream — see `LICENSE`.
 
-Full plan/rationale: `/home/wasabi/.claude/plans/spicy-meandering-fern.md`.
-Live progress tracking: `TODO.md` at the repo root.
+Scope was worked out ahead of time in a separate planning pass (not included
+in this repo). Live progress tracking: `TODO.md` at the repo root.
 
 ## Status (2026-09-07, updated)
 
