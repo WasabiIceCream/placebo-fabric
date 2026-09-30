@@ -12,6 +12,7 @@
   "license": "MIT",
 
   "environment": "*",
+  "accessWidener": "placebo.accesswidener",
   "entrypoints": {
     "main": [
       "dev.shadowsoffire.placebo.Placebo"
