@@ -6,7 +6,7 @@ is built on. Built for the Gameoverse Minecraft server (Fabric 26.1.2) as a
 dependency of our [Apotheosis Fabric port](https://github.com/WasabiIceCream/apotheosis-fabric),
 and isn't useful on its own without another mod that depends on it.
 
-Ported only as far as needed to support that Apotheosis port, not a
+Ported only as far as needed to support that Apotheosis port and our Apothic Attributes port, not a
 complete 1:1 port of every Placebo feature. It covers dynamic registries
 and datapack-driven content, networking, item/block-entity utilities, and
 the attribute-modifier and enchantment-level hooks Apotheosis's affix/gem

@@ -251,3 +251,46 @@ in `apotheosis-fabric/DEVLOG.md`.
   Subclasses that add their own dependencies (Apotheosis's affix/rarity-override,
   invader and elite registries) are unaffected. Verified on the local server:
   `Loaded 10 tags for placebo:gear_sets` with no errors.
+
+## 0.1.3 (2026-09-30): wiring audit; tab filling and brewing mixes
+
+Audit of every integration point upstream Placebo `26.1` (10.0.2, `8fcfa1e`) has, against what calls the port's code at
+runtime, scoped to what Apotheosis and Apothic Attributes use (29 rows: 17 wired, 3 fixed, 9 skipped with a reason).
+
+| Upstream point | Port wiring | Status |
+|---|---|---|
+| `Placebo` ctor: `TextColor.NAMED_COLORS` made mutable, `GradientColor.RAINBOW` registered as the named color `rainbow` | none | skipped: vanilla `TextColor` can't be subclassed here (see `GradientColor`'s port note); Apotheosis's port resolves its rainbow colors itself and its Craig elite uses `light_purple` |
+| `TabFillingRegistry::fillTabs` (`BuildCreativeModeTabContentsEvent`) | `tabs/TabFillingRegistry`, Fabric `CreativeModeTabEvents.modifyOutputEvent` per registered tab | **fixed** (was unported; Fabric API does have the event) |
+| `PayloadHelper` (`RegisterPayloadHandlersEvent`) | `network/PayloadHelper`: codecs + server receivers at registration, client receivers from `PlaceboClient` | wired |
+| Payloads: button click, dynamic registry start/content/end, tag sync | `Placebo#onInitialize` | wired |
+| Payload: Patreon disable | none | skipped (Patreon cosmetics) |
+| `GearSetRegistry.registerToBus()` | `Placebo#onInitialize` | wired |
+| `MixRegistry.registerToBus()` + `applyMixes()` in `ServerAboutToStartEvent` | `systems/mixes/MixRegistry` (synced), applied in `SERVER_STARTING`, on every server reload and on client sync | **fixed** (was unported; Apothic Attributes' brewing mixes need it) |
+| `RegisterCommandsEvent` -> `/placebo` (hand to JSON, loot table, dimension type) | none | skipped: debug commands |
+| `AddServerReloadListenersEvent`: `ResourceReloadEvent` (server) | none | skipped: nothing in scope listens |
+| `AddServerReloadListenersEvent`: `DynamicTagManager` | `DynamicTagManager.register()` | wired |
+| `DynamicRegistry#addReloader` | `registerToBus()`: `ResourceManagerHelper` + ordering before the tag manager | wired |
+| `DynamicRegistry#sync` / `SyncManagement` (`OnDatapackSyncEvent`) | `ServerPlayConnectionEvents.JOIN` + `END_DATA_PACK_RELOAD` | wired |
+| `DeferredHelper` `RegisterEvent` / `NewRegistryEvent` | immediate registration into `BuiltInRegistries` / `FabricRegistryBuilder` | wired |
+| `DeferredHelper` `RegisterDataMapTypesEvent` | none | skipped: no data maps on Fabric; Apotheosis's port replaced its two data maps with its own registries |
+| `PlaceboTaskQueue` (server tick, started, stopped) | `ServerTickEvents` / `ServerLifecycleEvents` in its static init | wired |
+| `PlaceboConfig` (wandering trader list clearing) | none | skipped: no wanderer trade system in this Placebo version |
+| `ItemStackMixin` (`CachedObjectSource`) | `mixin/ItemStackCachedObjectMixin` | wired |
+| `AnvilBlockMixin` -> `AnvilLandEvent` | none in Placebo | skipped: Apotheosis's port hooks `AnvilBlock.onLand` itself (`AnvilGemSmashingMixin`) |
+| client `AbstractContainerScreenMixin` (`DrawsOnLeft`) | `mixin/client/AbstractContainerScreenMixin` | wired |
+| client `ChatComponentMixin`, datagen mixins | none | skipped: only for `/placebo` logging and datagen |
+| `PlaceboClient.ticks` (client tick) | `ClientTickEvents.END_CLIENT_TICK`; field public again (upstream API, used by Apothic's GUI) | wired |
+| `PlaceboClient.getBrewingRegistry` | added | **fixed** (with `MixRegistry`) |
+| Tooltip scroll for `SpecialTooltipItem` (`ItemTooltipEvent`, mouse scroll events) | none | skipped: only Gateways' tiered gate uses it (out of scope) |
+| Wings, trails, key mappings, render layers | none | skipped (Patreon cosmetics) |
+| Client `ResourceReloadEvent` | none | skipped with the server one |
+| Codecs, JSON helpers, menus, screens, block entities, config, `Offset`, `GradientColor` | ported library code (no event wiring) | wired |
+| Access transformer: `PotionBrewing` mix lists and `Mix` | `placebo.accesswidener` | **fixed** with `MixRegistry` |
+| Access transformer: `RecipeManager`, `LootPool.Builder`, `StateHolder`, `TextColor`, `updateDataSlotListeners`, `Screen.font` | not needed by the ported code | skipped |
+| `ITabFiller` | ported | wired |
+
+Test: boot log shows `Registered 34 placebo:brewing_mixes` (with Apothic Attributes 3.0.1-fabric.6) on the server and
+again on the client after joining; a brewing stand accepts Wither Skeleton Skull on an Awkward Potion. `/reload` logs the
+same count and the recipes still work (no duplicates in JEI's brewing category).
+
+Gap for Apotheosis's port: it registers no creative tab; upstream fills an Adventure tab through `TabFillingRegistry`.
