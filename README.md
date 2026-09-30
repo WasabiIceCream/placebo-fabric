@@ -8,7 +8,8 @@ and isn't useful on its own without another mod that depends on it.
 
 Ported only as far as needed to support that Apotheosis port and our Apothic Attributes port, not a
 complete 1:1 port of every Placebo feature. It covers dynamic registries
-and datapack-driven content, networking, item/block-entity utilities, and
+and datapack-driven content (including data-driven brewing mixes), creative-tab
+filling, networking, item/block-entity utilities, and
 the attribute-modifier and enchantment-level hooks Apotheosis's affix/gem
 system needs.
 

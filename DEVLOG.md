@@ -255,7 +255,7 @@ in `apotheosis-fabric/DEVLOG.md`.
 ## 0.1.3 (2026-09-30): wiring audit; tab filling and brewing mixes
 
 Audit of every integration point upstream Placebo `26.1` (10.0.2, `8fcfa1e`) has, against what calls the port's code at
-runtime, scoped to what Apotheosis and Apothic Attributes use (29 rows: 17 wired, 3 fixed, 9 skipped with a reason).
+runtime, scoped to what Apotheosis and Apothic Attributes use (29 rows: 13 wired, 4 fixed, 12 skipped with a reason).
 
 | Upstream point | Port wiring | Status |
 |---|---|---|
