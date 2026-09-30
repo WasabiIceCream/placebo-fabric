@@ -229,3 +229,25 @@ was never a tag-order issue). Only the two genuinely out-of-scope gaps remain:
 `armor/attribute/{aquatic,unbound}` (real NeoForge-only attributes) and
 `the_end/endersurge` (NeoForge-only holder-set wildcard) — both noted above and
 in `apotheosis-fabric/DEVLOG.md`.
+
+## 0.1.2 (2026-09-29): gear sets; dynamic tags load after their registries
+
+- Ported `systems/gear/GearSet` + `GearSetRegistry` (`placebo:gear_sets`,
+  registered in `Placebo#onInitialize` like upstream) and `json/WeightedItemStack`
+  (the copy parked in `not-yet-ported/` was identical to upstream and is gone).
+  Needed by apotheosis-fabric 0.4.0's invaders, elites and augmentations. The mix
+  registry registered beside it upstream is still not ported.
+- **Fix: dynamic tags resolved before their registries loaded.**
+  `DynamicRegistry#getFabricDependencies()` returned `DynamicTagManager.ID`,
+  meant as "the tag manager runs after me". Fabric's legacy
+  `ResourceManagerHelper` reads a listener's dependencies once, at registration,
+  as listeners that run *before* it, so the tag manager applied first: on a fresh
+  boot every tag failed with "Couldn't load tag ... due to missing references",
+  and on later reloads tags resolved against the previous reload's content.
+  Nothing used dynamic tags before the gear-set tags, so this never showed.
+  `getFabricDependencies()` now returns nothing by default, and `registerToBus()`
+  adds the edge the right way round with Fabric's
+  `ResourceLoader#addListenerOrdering(registryId, DynamicTagManager.ID)`.
+  Subclasses that add their own dependencies (Apotheosis's affix/rarity-override,
+  invader and elite registries) are unaffected. Verified on the local server:
+  `Loaded 10 tags for placebo:gear_sets` with no errors.

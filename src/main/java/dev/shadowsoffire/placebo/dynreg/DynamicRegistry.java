@@ -329,6 +329,10 @@ public abstract class DynamicRegistry<R> extends SimplePreparableReloadListener<
             SyncManagement.registerForSync(this);
         }
         ResourceManagerHelper.get(PackType.SERVER_DATA).registerReloadListener(this);
+        // Tags resolve against registry content, so this registry must apply before the tag manager (upstream:
+        // addDependency(this.id, DynamicTagManager.ID) in the reload-listener event). Fabric's legacy helper reads
+        // getFabricDependencies() once, at registration, as "these run before me", so the edge is added directly here.
+        net.fabricmc.fabric.api.resource.v1.ResourceLoader.get(PackType.SERVER_DATA).addListenerOrdering(this.id, DynamicTagManager.ID);
     }
 
     /**
@@ -416,9 +420,18 @@ public abstract class DynamicRegistry<R> extends SimplePreparableReloadListener<
         return this.id;
     }
 
+    /**
+     * Reload listeners that must apply before this registry (e.g. a registry whose codec resolves holders from another).
+     * Empty by default. Read once, when {@link #registerToBus()} runs.
+     * <p>
+     * Port note (fix, 0.1.2): this used to return {@link DynamicTagManager#ID}, meant as "the tag manager runs after
+     * me". Fabric reads the dependencies the other way round, so the tag manager ran first and every dynamic tag
+     * failed with "missing references" on a fresh boot (and resolved against the previous reload's content after
+     * that). The tag ordering edge is now added in {@link #registerToBus()}.
+     */
     @Override
     public Collection<Identifier> getFabricDependencies() {
-        return Set.of(DynamicTagManager.ID);
+        return Set.of();
     }
 
     /**

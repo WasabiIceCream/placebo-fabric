@@ -21,9 +21,8 @@ import net.minecraft.util.profiling.ProfilerFiller;
 /**
  * Reload listener responsible for loading tag JSON files for every constructed {@link DynamicRegistry}.
  * <p>
- * Runs after every {@code DynamicRegistry} reload listener, via the {@link IdentifiableResourceReloadListener}
- * dependency edge each {@code DynamicRegistry} declares back to {@link #ID} (see
- * {@link DynamicRegistry#getFabricDependencies()}). The {@link #prepare} step scans tag JSON files
+ * Runs after every {@code DynamicRegistry} reload listener, via the listener-ordering edge each
+ * {@code DynamicRegistry} adds from itself to {@link #ID} in {@link DynamicRegistry#registerToBus()}. The {@link #prepare} step scans tag JSON files
  * (off-thread, parallel to other reload listeners' prepare phases). The {@link #apply} step resolves
  * the scanned entries against the now-populated registries and binds the resolved tags — resolution must
  * happen during apply because preparation runs in parallel with content listeners' prepare and the registry

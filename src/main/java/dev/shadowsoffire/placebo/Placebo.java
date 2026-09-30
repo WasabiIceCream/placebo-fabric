@@ -8,6 +8,7 @@ import dev.shadowsoffire.placebo.dynreg.TagSyncPayload;
 import dev.shadowsoffire.placebo.dynreg.tag.DynamicTagManager;
 import dev.shadowsoffire.placebo.network.PayloadHelper;
 import dev.shadowsoffire.placebo.payloads.ButtonClickPayload;
+import dev.shadowsoffire.placebo.systems.gear.GearSetRegistry;
 import net.fabricmc.api.ModInitializer;
 import net.minecraft.resources.Identifier;
 
@@ -16,7 +17,7 @@ import net.minecraft.resources.Identifier;
  * Apotheosis Adventure-module Fabric port — see mod-dev/placebo-fabric/README.md.
  *
  * Port note: upstream's {@code Placebo} constructor/setup wires up commands, datagen
- * field orderings, gear-set/mix registries, tab-filling, and a custom-color system —
+ * field orderings, the mix registry, tab-filling, and a custom-color system —
  * none of that is ported yet (out of scope for the Adventure module or not yet reached
  * in the port order). This is intentionally a partial entrypoint; expand as more of
  * Placebo gets ported rather than treating this as feature-complete.
@@ -35,6 +36,10 @@ public class Placebo implements ModInitializer {
         PayloadHelper.registerPayload(new DynRegPayloads.End.Provider());
         PayloadHelper.registerPayload(new TagSyncPayload.Provider());
         PayloadHelper.registerPayload(new ButtonClickPayload.Provider());
+
+        // Gear sets (placebo:gear_sets), used by Apotheosis's invaders, elites and augmentations.
+        // Upstream registers this in the same place; the mix registry beside it is not ported.
+        GearSetRegistry.INSTANCE.registerToBus();
 
         LOGGER.info("Placebo (Fabric port, partial) initializing");
     }
