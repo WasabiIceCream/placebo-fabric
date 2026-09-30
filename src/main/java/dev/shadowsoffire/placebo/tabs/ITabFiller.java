@@ -15,12 +15,8 @@ import net.minecraft.world.level.ItemLike;
  * the tab being built — takes the vanilla {@link Output} directly instead, which is that
  * same accept-items capability without the event wrapper.
  * <p>
- * Note: {@link TabFillingRegistry}, which cross-cuttingly injects an {@code ITabFiller}
- * into arbitrary (including vanilla/other mods') tabs, is not yet ported — it needs a
- * mixin into {@code CreativeModeTab.buildContents} (no Fabric API event exists for this
- * at all, unlike NeoForge). This interface itself has no such dependency, so it's ported
- * standalone; items that implement it only actually get pulled into other tabs once
- * {@code TabFillingRegistry} exists.
+ * {@link TabFillingRegistry} runs registered fillers for any tab, vanilla's and other mods' included, through
+ * Fabric API's creative-tab output event.
  */
 public interface ITabFiller {
 

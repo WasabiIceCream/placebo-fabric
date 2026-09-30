@@ -9,6 +9,7 @@ import dev.shadowsoffire.placebo.dynreg.tag.DynamicTagManager;
 import dev.shadowsoffire.placebo.network.PayloadHelper;
 import dev.shadowsoffire.placebo.payloads.ButtonClickPayload;
 import dev.shadowsoffire.placebo.systems.gear.GearSetRegistry;
+import dev.shadowsoffire.placebo.systems.mixes.MixRegistry;
 import net.fabricmc.api.ModInitializer;
 import net.minecraft.resources.Identifier;
 
@@ -38,8 +39,10 @@ public class Placebo implements ModInitializer {
         PayloadHelper.registerPayload(new ButtonClickPayload.Provider());
 
         // Gear sets (placebo:gear_sets), used by Apotheosis's invaders, elites and augmentations.
-        // Upstream registers this in the same place; the mix registry beside it is not ported.
+        // Upstream registers this in the same place.
         GearSetRegistry.INSTANCE.registerToBus();
+        // Data-driven brewing mixes (placebo:brewing_mixes), used by Apothic Attributes' potions.
+        MixRegistry.INSTANCE.registerToBus();
 
         LOGGER.info("Placebo (Fabric port, partial) initializing");
     }

@@ -2,3 +2,11 @@ accessWidener   v2  official
 
 accessible field net/minecraft/client/gui/screens/inventory/AbstractContainerScreen leftPos I
 accessible field net/minecraft/client/gui/screens/inventory/AbstractContainerScreen topPos I
+
+# Brewing mixes (systems/mixes/MixRegistry), from upstream's accesstransformer.cfg.
+accessible field net/minecraft/world/item/alchemy/PotionBrewing potionMixes Ljava/util/List;
+mutable field net/minecraft/world/item/alchemy/PotionBrewing potionMixes Ljava/util/List;
+accessible field net/minecraft/world/item/alchemy/PotionBrewing containerMixes Ljava/util/List;
+mutable field net/minecraft/world/item/alchemy/PotionBrewing containerMixes Ljava/util/List;
+accessible class net/minecraft/world/item/alchemy/PotionBrewing$Mix
+accessible method net/minecraft/world/item/alchemy/PotionBrewing$Mix <init> (Lnet/minecraft/core/Holder;Lnet/minecraft/world/item/crafting/Ingredient;Lnet/minecraft/core/Holder;)V
