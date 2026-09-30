@@ -65,7 +65,7 @@ import net.minecraft.util.profiling.ProfilerFiller;
  * subscriber; reload-listener dependency ordering is expressed via
  * {@link IdentifiableResourceReloadListener#getFabricDependencies()} instead of
  * {@code AddServerReloadListenersEvent#addDependency}. Per-entry conditional loading
- * (NeoForge's embedded {@code "neoforge:conditions"}) is currently a no-op stub — see
+ * uses Fabric's {@code "fabric:load_conditions"} in place of NeoForge's {@code "neoforge:conditions"}, see
  * {@link JsonUtil#checkConditions}.
  *
  * @param <R> The base type of objects stored in this registry.
@@ -238,7 +238,7 @@ public abstract class DynamicRegistry<R> extends SimplePreparableReloadListener<
             : JsonOps.INSTANCE;
         objects.forEach((key, ele) -> {
             try {
-                if (JsonUtil.checkAndLogEmpty(ele, key, this.id, this.logger) && JsonUtil.checkConditions(ele, key, this.id, this.logger, JsonOps.INSTANCE)) {
+                if (JsonUtil.checkAndLogEmpty(ele, key, this.id, this.logger) && JsonUtil.checkConditions(ele, key, this.id, this.logger, currentRegistryLookup)) {
                     JsonObject obj = ele.getAsJsonObject();
                     R deserialized = codec.decode(ops, obj).getOrThrow(this::makeCodecException).getFirst();
                     this.register(key, deserialized);

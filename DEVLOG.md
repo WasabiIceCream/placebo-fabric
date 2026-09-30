@@ -294,3 +294,9 @@ again on the client after joining; a brewing stand accepts Wither Skeleton Skull
 same count and the recipes still work (no duplicates in JEI's brewing category).
 
 Gap for Apotheosis's port: it registers no creative tab; upstream fills an Adventure tab through `TabFillingRegistry`.
+
+### 0.1.3 addendum (2026-09-30): per-entry load conditions
+`JsonUtil.checkConditions` was an always-true stub. It now reads Fabric's `"fabric:load_conditions"` (one condition or an
+array, all must pass) on any dynamic-registry entry, with the current registries for `registry_contains`/`tags_populated`.
+Lets a datapack disable an entry cleanly (an empty `{}` file also works but logs an ERROR). First use: Gameoverse's
+`gameoverse-potion-dedupe` datapack disabling three Apothic brewing mixes.
